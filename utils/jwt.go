@@ -9,16 +9,19 @@ import (
 
 const secretKey = "superSecret"
 
-func GenerateToken(email string, userId int64) (string, error) {
+func GenerateToken(email string, userID int64) (time.Time, string, error) {
+	exp := time.Now().Add(time.Hour * 2)
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"email":  email,
-			"userId": userId,
-			"exp":    time.Now().Add(time.Hour * 2).Unix(),
-		})
+			"userID": userID,
+			"exp":    exp.Unix(),
+		},
+	)
+	signed, err := token.SignedString([]byte(secretKey))
 
-	return token.SignedString([]byte(secretKey))
+	return exp, signed, err
 }
 
 func VerifyToken(tokenStr string) (int64, error) {
@@ -46,7 +49,7 @@ func VerifyToken(tokenStr string) (int64, error) {
 	}
 
 	// email := claims["email"].(string)
-	id := claims["userId"].(float64)
+	id := claims["userID"].(float64)
 	// exp := claims["exp"].(int64)
 
 	return int64(id), nil

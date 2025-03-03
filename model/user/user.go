@@ -1,4 +1,4 @@
-package model
+package user
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ type User struct {
 }
 
 func (user User) Save() error {
-	query := "INSERT INTO users(email, password) VALUES(?, ?)"
+	query := "INSERT INTO User(email, password) VALUES(?, ?)"
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
@@ -25,14 +25,11 @@ func (user User) Save() error {
 		return err
 	}
 
-	result, err := stmt.Exec(user.Email, pwHash)
+	_, err = stmt.Exec(user.Email, pwHash)
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-
-	user.ID = id
 	return err
 }
 
@@ -60,13 +57,13 @@ func GetAllUsers() ([]User, error) {
 }
 
 func (user *User) Validate() error {
-	query := "SELECT id, password FROM users WHERE email = ?"
+	query := "SELECT id, password FROM User WHERE email = ?"
 	row := db.DB.QueryRow(query, user.Email)
 
 	var dbPw string
 	err := row.Scan(&user.ID, &dbPw)
 	if err != nil {
-		return errors.New("You must provide a 'password' value.")
+		return err
 	}
 
 	pwValid := utils.ValidatePw(dbPw, user.Password)
